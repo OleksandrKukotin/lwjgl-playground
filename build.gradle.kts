@@ -1,3 +1,5 @@
+import org.gradle.launcher.daemon.configuration.DaemonBuildOptions.JvmArgsOption
+
 plugins {
     id("java")
 }
@@ -9,9 +11,14 @@ repositories {
     mavenCentral()
 }
 
-val lwjglVersion = "3.1.0"
+val lwjglCoreVersion = "3.3.0"
+val lwjglBindingsVersion = "3.3.0"
+
 dependencies {
-    implementation("org.lwjgl:lwjgl:$lwjglVersion")
+    implementation("org.lwjgl:lwjgl:$lwjglCoreVersion")
+    implementation("org.lwjgl.osgi:org.lwjgl.glfw:$lwjglBindingsVersion")
+    implementation("org.lwjgl.osgi:org.lwjgl.opengl:$lwjglBindingsVersion")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
