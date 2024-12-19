@@ -99,8 +99,12 @@ public class HelloWorld {
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
+        float angle = 0.0f;
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+
+            glPushMatrix();
+            glRotatef(angle, 1.0f, 2.0f, 1.0f);
 
             glBegin(GL_TRIANGLES);
             glColor3f(1.0f, 0.0f, 0.0f); glVertex2f(-0.5f, -0.5f);
@@ -108,11 +112,13 @@ public class HelloWorld {
             glColor3f(0.0f, 0.0f, 1.0f); glVertex2f(0.0f, 0.5f);
             glEnd();
 
+            glPopMatrix();
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
+            angle += 1.0f;
         }
     }
 
