@@ -116,7 +116,7 @@ public class DrawElementsDemo {
         debugProc = GLUtil.setupDebugMessageCallback();
 
         // Set the clear color
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(1.0f, 0.3f, 0.3f, 0.0f);
 
         int vbo = glGenBuffers();
         int ibo = glGenBuffers();
