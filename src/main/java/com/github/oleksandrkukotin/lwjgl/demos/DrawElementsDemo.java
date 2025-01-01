@@ -120,7 +120,7 @@ public class DrawElementsDemo {
 
         int vbo = glGenBuffers();
         int ibo = glGenBuffers();
-        float[] vertices = {-1.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f};
+        float[] vertices = {0.0f, 0.0f, -1.5f, 0.5f, 0.0f, -1.0f};
         int[] indices = {0, 1, 2};
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
