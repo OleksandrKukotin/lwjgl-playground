@@ -115,11 +115,11 @@ public class DrawElementsDemo {
         debugProc = GLUtil.setupDebugMessageCallback();
 
         // Set the clear color
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+        glClearColor(1.0f, 0.3f, 0.3f, 0.0f);
 
         int vbo = glGenBuffers();
         int ibo = glGenBuffers();
-        float[] vertices = {-1.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f};
+        float[] vertices = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f};
         int[] indices = {0, 1, 2};
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
@@ -130,6 +130,9 @@ public class DrawElementsDemo {
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
+        float rotatingAngle = 0.0f;
+        float color = 0.0f;
+        float red, green, blue;
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
@@ -138,13 +141,21 @@ public class DrawElementsDemo {
             float aspect = (float) width / height;
             glLoadIdentity();
             glOrtho(-aspect, aspect, -1, 1, -1, 1);
+            glRotatef(rotatingAngle, 0.0f, 0.0f, 1.0f);
+            red = Math.abs((float) Math.tan(color));
+            green = 1.0f;
+            blue = 0.1f;
+            glColor3f(red, green, blue);
             glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0L);
+
 
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
+            rotatingAngle -= 0.5f;
+            color += 0.05f;
         }
     }
 
