@@ -1,56 +1,67 @@
-package com.github.oleksandrkukotin.lwjgl.demos;
+package com.github.oleksandrkukotin.triptangle;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
-import org.lwjgl.system.*;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GLUtil;
+import org.lwjgl.system.Callback;
+import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_PROJECTION;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL11.GL_VERTEX_ARRAY;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.glDrawElements;
+import static org.lwjgl.opengl.GL11.glEnableClientState;
+import static org.lwjgl.opengl.GL11.glLoadIdentity;
+import static org.lwjgl.opengl.GL11.glMatrixMode;
+import static org.lwjgl.opengl.GL11.glOrtho;
+import static org.lwjgl.opengl.GL11.glVertexPointer;
+import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 
-public class DrawElementsDemo {
-    /*
-     * Copyright LWJGL. All rights reserved.
-     * License terms: https://www.lwjgl.org/license
-     */
+public class Renderer {
 
-
-    // We need to strongly reference callback instances.
-    private GLFWErrorCallback errorCallback;
     private GLFWKeyCallback keyCallback;
     private GLFWFramebufferSizeCallback fbCallback;
     private Callback debugProc;
 
     // The window handle
     private long window;
-    private int width, height;
+    private int width = 1980/2;
+    private int height = 1080/2;
 
-    public void run() {
-        try {
+    public void render() {
+        try (GLFWErrorCallback errorCallback = GLFWErrorCallback.createPrint(System.err)) {
+            glfwSetErrorCallback(errorCallback);
             init();
             loop();
 
-            // Release window and window callbacks
             glfwDestroyWindow(window);
             keyCallback.free();
             fbCallback.free();
             if (debugProc != null)
                 debugProc.free();
         } finally {
-            // Terminate GLFW and release the GLFWerrorfun
             glfwTerminate();
             glfwSetErrorCallback(null).free();
         }
     }
 
     private void init() {
-        // Setup an error callback. The default implementation
-        // will print the error message in System.err.
-        glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
-
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
@@ -62,11 +73,8 @@ public class DrawElementsDemo {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
 
-        final int WIDTH = 1980/2;
-        final int HEIGHT = 1080/2;
-
         // Create the window
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World!", NULL, NULL);
+        window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
         if (window == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
 
@@ -146,9 +154,5 @@ public class DrawElementsDemo {
             // invoked during this call.
             glfwPollEvents();
         }
-    }
-
-    public static void main(String[] args) {
-        new DrawElementsDemo().run();
     }
 }
