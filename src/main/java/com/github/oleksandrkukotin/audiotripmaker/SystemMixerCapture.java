@@ -30,7 +30,7 @@ public class SystemMixerCapture {
 
             DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
 
-            // Open and start capturing audio
+            // Need to investigate if I can capture audio from the Playback devices
             TargetDataLine line = (TargetDataLine) mixer.getLine(info);
             line.open(format);
             line.start();
