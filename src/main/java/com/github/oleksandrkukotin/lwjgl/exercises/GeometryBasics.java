@@ -1,6 +1,10 @@
 package com.github.oleksandrkukotin.lwjgl.exercises;
 
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWKeyCallback;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.system.Callback;
 
 import java.nio.FloatBuffer;
 
@@ -13,6 +17,11 @@ public class GeometryBasics {
 
     private long window;
 
+    private GLFWErrorCallback errorCallback;
+    private GLFWKeyCallback keyCallback;
+    private GLFWFramebufferSizeCallback fbCallback;
+    private Callback debugProc;
+
     public void run() {
         initializeGLFW();
         setupAndInitializeOpenGLContext();
@@ -24,10 +33,28 @@ public class GeometryBasics {
         if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW");
         }
+        glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+        glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
+            @Override
+            public void invoke(long window, int key, int scancode, int action, int mods) {
+                if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
+                    glfwSetWindowShouldClose(window, true); // We will detect this in our rendering loop
+            }
+        });
+        glfwSetFramebufferSizeCallback(window, fbCallback = new GLFWFramebufferSizeCallback() {
+            @Override
+            public void invoke(long window, int w, int h) {
+                if (w > 0 && h > 0) {
+                    width = w;
+                    height = h;
+                }
+            }
+        });
     }
 
     private void createWindow() {
@@ -70,6 +97,10 @@ public class GeometryBasics {
 
         memFree(vertexBuffer);
         glfwDestroyWindow(window);
+        keyCallback.free();
+        fbCallback.free();
+        if (debugProc != null)
+            debugProc.free();
         glfwTerminate();
     }
 
