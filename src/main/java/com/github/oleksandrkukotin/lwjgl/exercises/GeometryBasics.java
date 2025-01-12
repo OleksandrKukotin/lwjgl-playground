@@ -3,19 +3,23 @@ package com.github.oleksandrkukotin.lwjgl.exercises;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Callback;
+import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.memAllocFloat;
-import static org.lwjgl.system.MemoryUtil.memFree;
+import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 
 public class GeometryBasics {
 
     private long window;
+    private int width, height;
 
     private GLFWErrorCallback errorCallback;
     private GLFWKeyCallback keyCallback;
@@ -39,6 +43,11 @@ public class GeometryBasics {
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
+        window = glfwCreateWindow(1920/2, 1080/2, "Hello World!", NULL, NULL);
+        if (window == NULL)
+            throw new RuntimeException("Failed to create the GLFW window");
+
+        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
@@ -55,6 +64,22 @@ public class GeometryBasics {
                 }
             }
         });
+
+        GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        glfwSetWindowPos(window, (vidMode.width() - width) / 2, (vidMode.height() - height) / 2);
+        try (MemoryStack frame = MemoryStack.stackPush()) {
+            IntBuffer framebufferSize = frame.mallocInt(2);
+            nglfwGetFramebufferSize(window, memAddress(framebufferSize), memAddress(framebufferSize) + 4);
+            width = framebufferSize.get(0);
+            height = framebufferSize.get(1);
+        }
+        // Make the OpenGL context current
+        glfwMakeContextCurrent(window);
+        // Enable v-sync
+        glfwSwapInterval(1);
+
+        // Make the window visible
+        glfwShowWindow(window);
     }
 
     private void createWindow() {
