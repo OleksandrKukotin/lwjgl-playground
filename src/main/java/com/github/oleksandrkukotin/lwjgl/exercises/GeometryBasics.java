@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -27,10 +26,20 @@ public class GeometryBasics {
     private Callback debugProc;
 
     public void run() {
-        initializeGLFW();
-        setupAndInitializeOpenGLContext();
-        createWindow();
-        render();
+        try {
+            initializeGLFW();
+            setupAndInitializeOpenGLContext();
+            createWindow();
+            render();
+            glfwDestroyWindow(window);
+            keyCallback.free();
+            fbCallback.free();
+            if (debugProc != null)
+                debugProc.free();
+        } finally {
+            glfwTerminate();
+            glfwSetErrorCallback(null).free();
+        }
     }
 
     private void initializeGLFW() {
@@ -44,15 +53,15 @@ public class GeometryBasics {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         window = glfwCreateWindow(1920/2, 1080/2, "Hello World!", NULL, NULL);
-        if (window == NULL)
+        if (window == NULL) {
             throw new RuntimeException("Failed to create the GLFW window");
+        }
 
-        // Setup a key callback. It will be called every time a key is pressed, repeated or released.
         glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
                 if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-                    glfwSetWindowShouldClose(window, true); // We will detect this in our rendering loop
+                    glfwSetWindowShouldClose(window, true);
             }
         });
         glfwSetFramebufferSizeCallback(window, fbCallback = new GLFWFramebufferSizeCallback() {
@@ -73,12 +82,8 @@ public class GeometryBasics {
             width = framebufferSize.get(0);
             height = framebufferSize.get(1);
         }
-        // Make the OpenGL context current
         glfwMakeContextCurrent(window);
-        // Enable v-sync
         glfwSwapInterval(1);
-
-        // Make the window visible
         glfwShowWindow(window);
     }
 
@@ -98,13 +103,10 @@ public class GeometryBasics {
 
     private void render() {
         float[] vertices = {
-                0.5f, 0.0f, 0.0f,
-                -0.5f, 0.0f, 0.0f,
+                0.1f, 0.0f, 0.0f,
+                -0.1f, 0.0f, 0.0f,
                 0.0f, 0.5f, 0.0f,
         };
-
-        FloatBuffer vertexBuffer = memAllocFloat(vertices.length);
-        vertexBuffer.put(vertices).flip();
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
@@ -113,20 +115,11 @@ public class GeometryBasics {
             glColor3f(1.0f, 1.0f, 0.5f);
 
             glEnableClientState(GL_VERTEX_ARRAY);
-            glVertexPointer(3, GL_FLOAT, 0, vertexBuffer);
             glDrawArrays(GL_TRIANGLES, 0, 3);
             glDisableClientState(GL_VERTEX_ARRAY);
 
             glfwSwapBuffers(window);
         }
-
-        memFree(vertexBuffer);
-        glfwDestroyWindow(window);
-        keyCallback.free();
-        fbCallback.free();
-        if (debugProc != null)
-            debugProc.free();
-        glfwTerminate();
     }
 
     public static void main(String[] args) {
