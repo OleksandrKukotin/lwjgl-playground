@@ -1,5 +1,6 @@
 package com.github.oleksandrkukotin.lwjgl.exercises;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWKeyCallback;
@@ -12,6 +13,8 @@ import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL15C.glGenBuffers;
 import static org.lwjgl.system.MemoryUtil.*;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
@@ -102,11 +105,18 @@ public class GeometryBasics {
     }
 
     private void render() {
+        int vbo = glGenBuffers();
+        int ibo = glGenBuffers();
         float[] vertices = {
                 0.1f, 0.0f, 0.0f,
                 -0.1f, 0.0f, 0.0f,
                 0.0f, 0.5f, 0.0f,
         };
+
+        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        glVertexPointer(2, GL_FLOAT, 0, 0L);
 
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
