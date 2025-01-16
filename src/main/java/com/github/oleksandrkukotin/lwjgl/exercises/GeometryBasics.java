@@ -115,20 +115,32 @@ public class GeometryBasics {
         GL.createCapabilities();
         debugProc = GLUtil.setupDebugMessageCallback();
 
-        glClearColor(1.0f, 0.3f, 0.3f, 0.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
+
+
+        float[] vertices = {
+                -1.5f, -1.0f,
+                0.0f, 1.0f,
+                1.0f, 0.0f,
+
+                1.0f, -1.5f,
+                0.0f, -10.0f,
+                1.5f, 1.0f
+        };
+        int[] indices = {
+                0, 1, 2,
+                3, 4, 5
+        };
 
         int vbo = glGenBuffers();
-        int ibo = glGenBuffers();
-
-        float[] vertices = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f};
-        int[] indices = {0, 1, 2};
-
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
-        glEnableClientState(GL_VERTEX_ARRAY);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        int ebo = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indices.length).put(indices).flip(), GL_STATIC_DRAW);
+
+        glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer(2, GL_FLOAT, 0, 0L);
 
         float color = 0.0f;
