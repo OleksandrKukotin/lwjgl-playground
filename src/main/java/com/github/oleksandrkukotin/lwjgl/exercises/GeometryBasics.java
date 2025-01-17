@@ -111,52 +111,79 @@ public class GeometryBasics {
     }
 
     private void render() {
-
         GL.createCapabilities();
         debugProc = GLUtil.setupDebugMessageCallback();
 
+        // Set background color
         glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
 
-
-        float[] vertices = {
-                -1.5f, -1.0f,
-                0.0f, 1.0f,
-                1.0f, 0.0f,
-
-                1.0f, -1.5f,
-                0.0f, -10.0f,
-                1.5f, 1.0f
+        // Triangle A
+        float[] verticesA = {
+                0.0f, 0.0f,
+                0.5f, 1.0f,
+                1.0f, 0.0f
         };
-        int[] indices = {
-                0, 1, 2,
-                3, 4, 5
+        int[] indicesA = {
+                0, 1, 2
         };
 
-        int vbo = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
+        // Triangle B
+        float[] verticesB = {
+                0.0f, 0.0f,
+                0.5f, -1.0f,
+                1.0f, 0.0f
+        };
+        int[] indicesB = {
+                0, 1, 2 // Local indices for verticesB
+        };
 
-        int ebo = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indices.length).put(indices).flip(), GL_STATIC_DRAW);
+        // VBO and EBO for Triangle A
+        int vboA = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, vboA);
+        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(verticesA.length).put(verticesA).flip(), GL_STATIC_DRAW);
 
+        int eboA = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboA);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indicesA.length).put(indicesA).flip(), GL_STATIC_DRAW);
+
+        // VBO and EBO for Triangle B
+        int vboB = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, vboB);
+        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(verticesB.length).put(verticesB).flip(), GL_STATIC_DRAW);
+
+        int eboB = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboB);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indicesB.length).put(indicesB).flip(), GL_STATIC_DRAW);
+
+        // Enable vertex array
         glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(2, GL_FLOAT, 0, 0L);
 
+        // Rendering loop
         float color = 0.0f;
         while (!glfwWindowShouldClose(window)) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
 
             glViewport(0, 0, width, height);
             glMatrixMode(GL_PROJECTION);
             float aspect = (float) width / height;
             glLoadIdentity();
             glOrtho(-aspect, aspect, -1, 1, -1, 1);
-            glColor3f(1.0f, Math.abs((float) Math.tan(color)), 0.0f);
-            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0L);
 
-            glfwSwapBuffers(window); // swap the color buffers
+            // Draw Triangle A
+            glBindBuffer(GL_ARRAY_BUFFER, vboA);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboA);
+            glVertexPointer(2, GL_FLOAT, 0, 0L);
+            glColor3f(0.6f, Math.abs((float) Math.tan(color)), 0.0f);
+            glDrawElements(GL_TRIANGLES, indicesA.length, GL_UNSIGNED_INT, 0L);
 
+            // Draw Triangle B
+            glBindBuffer(GL_ARRAY_BUFFER, vboB);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboB);
+            glVertexPointer(2, GL_FLOAT, 0, 0L);
+            glColor3f(0.0f, Math.abs((float) Math.cos(color)), 0.4f);
+            glDrawElements(GL_TRIANGLES, indicesB.length, GL_UNSIGNED_INT, 0L);
+
+            glfwSwapBuffers(window); // Swap the color buffers
             glfwPollEvents();
             color += 0.02f;
         }
