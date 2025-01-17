@@ -118,6 +118,8 @@ public class GeometryBasics {
         glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
 
         // Triangle A
+        int vboA = glGenBuffers();
+        int eboA = glGenBuffers();
         float[] verticesA = {
                 0.0f, 0.0f,
                 0.5f, 1.0f,
@@ -126,8 +128,10 @@ public class GeometryBasics {
         int[] indicesA = {
                 0, 1, 2
         };
-
+        bindBuffersForTriangles(vboA, eboA, verticesA, indicesA);
         // Triangle B
+        int vboB = glGenBuffers();
+        int eboB = glGenBuffers();
         float[] verticesB = {
                 0.0f, 0.0f,
                 0.5f, -1.0f,
@@ -136,24 +140,7 @@ public class GeometryBasics {
         int[] indicesB = {
                 0, 1, 2 // Local indices for verticesB
         };
-
-        // VBO and EBO for Triangle A
-        int vboA = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboA);
-        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(verticesA.length).put(verticesA).flip(), GL_STATIC_DRAW);
-
-        int eboA = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboA);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indicesA.length).put(indicesA).flip(), GL_STATIC_DRAW);
-
-        // VBO and EBO for Triangle B
-        int vboB = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, vboB);
-        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(verticesB.length).put(verticesB).flip(), GL_STATIC_DRAW);
-
-        int eboB = glGenBuffers();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboB);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indicesB.length).put(indicesB).flip(), GL_STATIC_DRAW);
+        bindBuffersForTriangles(vboB, eboB, verticesB, indicesB);
 
         // Enable vertex array
         glEnableClientState(GL_VERTEX_ARRAY);
@@ -170,23 +157,37 @@ public class GeometryBasics {
             glOrtho(-aspect, aspect, -1, 1, -1, 1);
 
             // Draw Triangle A
-            glBindBuffer(GL_ARRAY_BUFFER, vboA);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboA);
-            glVertexPointer(2, GL_FLOAT, 0, 0L);
-            glColor3f(0.6f, Math.abs((float) Math.tan(color)), 0.0f);
-            glDrawElements(GL_TRIANGLES, indicesA.length, GL_UNSIGNED_INT, 0L);
+            float redA = 0.1f;
+            float greenA = Math.abs((float) Math.sin(color));
+            float blueA = Math.abs((float) Math.cos(color));
+            drawTriangle(vboA, eboA, redA, greenA, blueA, indicesA);
 
             // Draw Triangle B
-            glBindBuffer(GL_ARRAY_BUFFER, vboB);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboB);
-            glVertexPointer(2, GL_FLOAT, 0, 0L);
-            glColor3f(0.0f, Math.abs((float) Math.cos(color)), 0.4f);
-            glDrawElements(GL_TRIANGLES, indicesB.length, GL_UNSIGNED_INT, 0L);
+            float redB = 0.55f;
+            float greenB = Math.abs((float) Math.tan(color));
+            float blueB = Math.abs((float) Math.cos(color));
+            drawTriangle(vboB, eboB, redB, greenB, blueB, indicesB);
 
             glfwSwapBuffers(window); // Swap the color buffers
             glfwPollEvents();
             color += 0.02f;
         }
+    }
+
+    private void bindBuffersForTriangles(int vbo, int ebo, float[] vertices, int[] indices) {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indices.length).put(indices).flip(), GL_STATIC_DRAW);
+    }
+
+    private void drawTriangle(int vbo, int ebo, float red, float green, float blue, int[] indices) {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glVertexPointer(2, GL_FLOAT, 0, 0L);
+        glColor3f(red, green, blue);
+        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
     }
 
     public static void main(String[] args) {
