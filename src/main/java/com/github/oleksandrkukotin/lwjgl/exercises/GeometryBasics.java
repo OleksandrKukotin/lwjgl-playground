@@ -118,29 +118,23 @@ public class GeometryBasics {
         glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
 
         // Triangle A
-        int vboA = glGenBuffers();
-        int eboA = glGenBuffers();
-        float[] verticesA = {
+        int vbo = glGenBuffers();
+        int ebo = glGenBuffers();
+        float[] vertices = {
                 0.0f, 0.0f,
                 0.5f, 1.0f,
-                1.0f, 0.0f
+                1.0f, 0.0f,
+
+                -0.1f, 0.0f,
+                -0.5f, -1.0f,
+                -1.0f, 0.0f
         };
-        int[] indicesA = {
-                0, 1, 2
+        int[] indices = {
+                0, 1, 2,
+                2, 3,
+                3, 4, 5
         };
-        bindBuffersForTriangles(vboA, eboA, verticesA, indicesA);
-        // Triangle B
-        int vboB = glGenBuffers();
-        int eboB = glGenBuffers();
-        float[] verticesB = {
-                0.0f, 0.0f,
-                0.5f, -1.0f,
-                1.0f, 0.0f
-        };
-        int[] indicesB = {
-                0, 1, 2 // Local indices for verticesB
-        };
-        bindBuffersForTriangles(vboB, eboB, verticesB, indicesB);
+        bindBuffersForTriangles(vbo, ebo, vertices, indices);
 
         // Enable vertex array
         glEnableClientState(GL_VERTEX_ARRAY);
@@ -157,16 +151,10 @@ public class GeometryBasics {
             glOrtho(-aspect, aspect, -1, 1, -1, 1);
 
             // Draw Triangle A
-            float redA = 0.1f;
-            float greenA = Math.abs((float) Math.sin(color));
-            float blueA = Math.abs((float) Math.cos(color));
-            drawTriangle(vboA, eboA, redA, greenA, blueA, indicesA);
-
-            // Draw Triangle B
-            float redB = 0.55f;
-            float greenB = Math.abs((float) Math.tan(color));
-            float blueB = Math.abs((float) Math.cos(color));
-            drawTriangle(vboB, eboB, redB, greenB, blueB, indicesB);
+            float red = 0.1f;
+            float green = Math.abs((float) Math.sin(color));
+            float blue = Math.abs((float) Math.cos(color));
+            drawTriangle(vbo, ebo, red, green, blue, indices);
 
             glfwSwapBuffers(window); // Swap the color buffers
             glfwPollEvents();
@@ -187,7 +175,7 @@ public class GeometryBasics {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glVertexPointer(2, GL_FLOAT, 0, 0L);
         glColor3f(red, green, blue);
-        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
+        glDrawElements(GL_TRIANGLE_STRIP, indices.length, GL_UNSIGNED_INT, 0L);
     }
 
     public static void main(String[] args) {
