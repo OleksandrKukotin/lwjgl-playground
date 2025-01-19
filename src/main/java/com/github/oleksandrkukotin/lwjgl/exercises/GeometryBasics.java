@@ -130,9 +130,7 @@ public class GeometryBasics {
                 -1.0f, 0.0f
         };
         int[] indices = {
-                0, 1, 2,
-                2, 3,
-                3, 4, 5
+                0, 1, 2, 3, 4, 5
         };
         bindBuffersForTriangles(vbo, ebo, vertices, indices);
 
@@ -175,7 +173,7 @@ public class GeometryBasics {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glVertexPointer(2, GL_FLOAT, 0, 0L);
         glColor3f(red, green, blue);
-        glDrawElements(GL_TRIANGLE_STRIP, indices.length, GL_UNSIGNED_INT, 0L);
+        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
     }
 
     public static void main(String[] args) {
