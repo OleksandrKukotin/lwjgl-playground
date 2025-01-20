@@ -17,6 +17,8 @@ dependencies {
     implementation("org.lwjgl.osgi:org.lwjgl.glfw:$lwjglBindingsVersion")
     implementation("org.lwjgl.osgi:org.lwjgl.opengl:$lwjglBindingsVersion")
 
+    implementation("io.github.kotlin-graphics:glm:0.9.9.1-12")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

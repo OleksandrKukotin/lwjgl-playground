@@ -1,4 +1,4 @@
-package com.github.oleksandrkukotin.lwjgl.exercises;
+package com.github.oleksandrkukotin.lwjgl.exercises.geometry.basics;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -18,7 +18,7 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL15C.glGenBuffers;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
-public class GeometryBasics {
+public class TriangleDrawer {
 
     private long window;
     private int width;
@@ -177,6 +177,6 @@ public class GeometryBasics {
     }
 
     public static void main(String[] args) {
-        new GeometryBasics().run();
+        new TriangleDrawer().run();
     }
 }
