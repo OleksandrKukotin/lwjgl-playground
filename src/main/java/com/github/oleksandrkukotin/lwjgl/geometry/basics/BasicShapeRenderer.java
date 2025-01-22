@@ -73,7 +73,7 @@ public class BasicShapeRenderer {
     }
 
     private void createWindow() {
-        window = glfwCreateWindow(1920 / 2, 1080 / 2, "Geometry Basics", 0, 0);
+        window = glfwCreateWindow(1920 / 2, 1080 / 2, "Basic Shapes Render", 0, 0);
         if (window == 0) {
             throw new IllegalStateException("Unable to create window");
         }
