@@ -1,4 +1,4 @@
-package com.github.oleksandrkukotin.lwjgl.exercises.geometry.matrices.exception;
+package com.github.oleksandrkukotin.lwjgl.geometry.matrices.exception;
 
 public class ShaderCompileException extends RuntimeException {
     public ShaderCompileException(String message) {

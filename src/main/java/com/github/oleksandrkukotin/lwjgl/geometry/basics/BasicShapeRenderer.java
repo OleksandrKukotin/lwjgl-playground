@@ -1,8 +1,5 @@
-package com.github.oleksandrkukotin.lwjgl.exercises.geometry.matrices;
+package com.github.oleksandrkukotin.lwjgl.geometry.basics;
 
-import com.github.oleksandrkukotin.lwjgl.exercises.geometry.matrices.exception.ShaderCompileException;
-import glm_.mat4x4.Mat4;
-import glm_.vec3.Vec3;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
@@ -13,37 +10,16 @@ import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL15C.glGenBuffers;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
-public class MatrixTransformer {
+public class BasicShapeRenderer {
 
-    private static final String VERTEX_SHADER_SOURCE = """
-            #version 330 core
-            layout(location = 0) in vec2 position;
-            uniform mat4 model;
-            void main() {
-                gl_Position = model * vec4(position, 0.0, 1.0);
-            }
-            """;
-
-    private static final String FRAGMENT_SHADER_SOURCE = """
-            #version 330 core
-            out vec4 FragColor;
-            uniform vec3 color;
-            void main() {
-                FragColor = vec4(color, 1.0);
-            }
-            """;
-
-    private int shaderProgram;
     private long window;
     private int width;
     private int height;
@@ -90,11 +66,10 @@ public class MatrixTransformer {
 
     private void setHints() {
         glfwDefaultWindowHints();
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 1);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     }
 
     private void createWindow() {
@@ -139,99 +114,69 @@ public class MatrixTransformer {
         GL.createCapabilities();
         debugProc = GLUtil.setupDebugMessageCallback();
 
-        glClearColor(0.2f, 0.1f, 0.5f, 0.0f);
+        // Set background color
+        glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
 
-        shaderProgram = createShaderProgram();
-
+        // Triangle A
         int vbo = glGenBuffers();
         int ebo = glGenBuffers();
-        int vao = glGenVertexArrays();
         float[] vertices = {
                 0.0f, 0.0f,
                 0.5f, 1.0f,
                 1.0f, 0.0f,
 
-                0.0f, 0.0f,
+                -0.1f, 0.0f,
                 -0.5f, -1.0f,
                 -1.0f, 0.0f
         };
-        int[] indices = {0, 1, 2, 3, 4, 5};
-        bindBuffersForTriangles(vao, vbo, ebo, vertices, indices);
+        int[] indices = {
+                0, 1, 2, 3, 4, 5
+        };
+        bindBuffersForTriangles(vbo, ebo, vertices, indices);
 
-        glUseProgram(shaderProgram);
+        // Enable vertex array
+        glEnableClientState(GL_VERTEX_ARRAY);
 
+        // Rendering loop
         float color = 0.0f;
         while (!glfwWindowShouldClose(window)) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the screen
 
             glViewport(0, 0, width, height);
+            glMatrixMode(GL_PROJECTION);
+            float aspect = (float) width / height;
+            glLoadIdentity();
+            glOrtho(-aspect, aspect, -1, 1, -1, 1);
 
-            Mat4 model = new Mat4(1.0f);
-            model.rotate(color, new Vec3(0.0f, 0.0f, color));
-            model.scale(new Vec3(1.0f, 1.0f, 1.0f));
+            // Draw Triangle A
+            float red = 0.1f;
+            float green = Math.abs((float) Math.sin(color));
+            float blue = Math.abs((float) Math.cos(color));
+            drawTriangle(vbo, ebo, red, green, blue, indices);
 
-            FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
-            model.to(matrixBuffer);
-            int modelLocation = glGetUniformLocation(shaderProgram, "model");
-            glUniformMatrix4fv(modelLocation, false, matrixBuffer);
-
-            int colorLocation = glGetUniformLocation(shaderProgram, "color");
-            glUniform3f(colorLocation, 0.5f, Math.abs((float) Math.sin(color)), Math.abs((float) Math.cos(color)));
-
-            glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
-
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(window); // Swap the color buffers
             glfwPollEvents();
-            color += 0.05f;
+            color += 0.02f;
         }
     }
 
-    private int createShaderProgram() {
-        int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, VERTEX_SHADER_SOURCE);
-        glCompileShader(vertexShader);
-        checkShaderCompileStatus(vertexShader);
-
-        int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, FRAGMENT_SHADER_SOURCE);
-        glCompileShader(fragmentShader);
-        checkShaderCompileStatus(fragmentShader);
-
-        int program = glCreateProgram();
-        glAttachShader(program, vertexShader);
-        glAttachShader(program, fragmentShader);
-        glLinkProgram(program);
-        if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE) {
-            throw new ShaderCompileException("Error during shader program compilation occurred: "
-                    + glGetProgramInfoLog(program));
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        return program;
-    }
-
-    private void checkShaderCompileStatus(int vertexShader) {
-        if (glGetShaderi(vertexShader, GL_COMPILE_STATUS) == GL_FALSE) {
-            throw new ShaderCompileException("Error during shader compilation occurred: " + glGetShaderi(vertexShader, GL_COMPILE_STATUS));
-        }
-    }
-
-    private void bindBuffersForTriangles(int vao, int vbo, int ebo, float[] vertices, int[] indices) {
-        glBindVertexArray(vao);
-
+    private void bindBuffersForTriangles(int vbo, int ebo, float[] vertices, int[] indices) {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices.length).put(vertices).flip(), GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.BYTES, 0L);
-        glEnableVertexAttribArray(0);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(indices.length).put(indices).flip(), GL_STATIC_DRAW);
     }
 
+    private void drawTriangle(int vbo, int ebo, float red, float green, float blue, int[] indices) {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glVertexPointer(2, GL_FLOAT, 0, 0L);
+        glColor3f(red, green, blue);
+        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
+    }
+
     public static void main(String[] args) {
-        new MatrixTransformer().run();
+        new BasicShapeRenderer().run();
     }
 }
