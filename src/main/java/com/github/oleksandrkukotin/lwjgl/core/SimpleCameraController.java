@@ -16,6 +16,7 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import static glm_.Java.glm;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
@@ -35,9 +36,13 @@ public class SimpleCameraController {
     private static final String VERTEX_SHADER_SOURCE = """
             #version 330 core
             layout(location = 0) in vec2 position;
+            
             uniform mat4 model;
+            uniform mat4 view;
+            uniform mat4 projection;
+            
             void main() {
-                gl_Position = model * vec4(position, 0.0, 1.0);
+                gl_Position = projection * view * model * vec4(position, 0.0, 1.0);
             }
             """;
 
@@ -57,13 +62,13 @@ public class SimpleCameraController {
     private Vec3 cameraPos = new Vec3(0.0f, 0.0f, 3.0f);
     private Vec3 cameraFront = new Vec3(0.0f, 0.0f, -1.0f);
     private Vec3 cameraUp = new Vec3(0.0f, 1.0f, 3.0f);
-    private float cameraSpeed = 0.05f;
+    private float cameraSpeed = 0.1f;
     private float yaw = -90.0f;
     private float pitch = 0.0f;
     private float sensitivity = 0.1f;
 
     private GLFWKeyCallback keyCallback;
-    private GLFWFramebufferSizeCallback fbCallback;
+    private GLFWFramebufferSizeCallback framebufferSizeCallback;
     private Callback debugProc;
 
     public void run() {
@@ -73,7 +78,7 @@ public class SimpleCameraController {
 
             glfwDestroyWindow(window);
             keyCallback.free();
-            fbCallback.free();
+            framebufferSizeCallback.free();
             if (debugProc != null)
                 debugProc.free();
         } finally {
@@ -125,13 +130,30 @@ public class SimpleCameraController {
         keyCallback = new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
-                if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-                    glfwSetWindowShouldClose(window, true);
+                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                    switch (key) {
+                        case GLFW_KEY_UP:
+                            cameraPos = cameraPos.plus(cameraFront.times(cameraSpeed));
+                            break;
+                        case GLFW_KEY_DOWN:
+                            cameraPos = cameraPos.minus(cameraFront.times(cameraSpeed));
+                            break;
+                        case GLFW_KEY_LEFT:
+                            cameraPos = cameraPos.minus(cameraFront.cross(cameraUp).normalize().times(cameraSpeed));
+                            break;
+                        case GLFW_KEY_RIGHT:
+                            cameraPos = cameraPos.plus(cameraFront.cross(cameraUp).normalize().times(cameraSpeed));
+                            break;
+                        case GLFW_KEY_ESCAPE:
+                            glfwSetWindowShouldClose(window, true);
+                            break;
+                    }
+                }
             }
         };
         glfwSetKeyCallback(window, keyCallback);
 
-        fbCallback = new GLFWFramebufferSizeCallback() {
+        framebufferSizeCallback = new GLFWFramebufferSizeCallback() {
             @Override
             public void invoke(long window, int w, int h) {
                 if (w > 0 && h > 0) {
@@ -140,7 +162,7 @@ public class SimpleCameraController {
                 }
             }
         };
-        glfwSetFramebufferSizeCallback(window, fbCallback);
+        glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     }
 
     private void setupAndInitializeOpenGLContext() {
@@ -183,6 +205,19 @@ public class SimpleCameraController {
             Mat4 model = new Mat4(1.0f);
             model.rotate(color, new Vec3(0.0f, 0.0f, color));
             model.scale(new Vec3(1.0f, 1.0f, 1.0f));
+
+            Mat4 view = glm.lookAt(cameraPos, cameraPos.plus(cameraFront), cameraUp);
+            int viewLocation = glGetUniformLocation(shaderProgram, "view");
+            glUniformMatrix4fv(viewLocation, false, view.to(BufferUtils.createFloatBuffer(16)));
+
+            Mat4 projection = glm.perspective(
+                    (float) Math.toRadians(45.0f),
+                    (float) width / height,
+                    0.1f,
+                    100.0f
+            );
+            int projectionLocation = glGetUniformLocation(shaderProgram, "projection");
+            glUniformMatrix4fv(projectionLocation, false, projection.to(BufferUtils.createFloatBuffer(16)));
 
             FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
             model.to(matrixBuffer);
