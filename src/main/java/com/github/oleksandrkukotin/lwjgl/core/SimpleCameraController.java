@@ -68,7 +68,7 @@ public class SimpleCameraController {
     private double previousMouseY = 0.0;
     private float yaw = -90.0f;
     private float pitch = 0.0f;
-    private float sensitivity = 0.1f;
+    private float sensitivity = 0.01f;
 
     private GLFWKeyCallback keyCallback;
     private GLFWFramebufferSizeCallback framebufferSizeCallback;
@@ -157,20 +157,19 @@ public class SimpleCameraController {
         glfwSetKeyCallback(window, keyCallback);
 
         glfwSetCursorPosCallback(window, (windowHandle, xpos, ypos) -> {
-            double dx = xpos - previousMouseX;
-            double dy = previousMouseY - ypos;
-
-            previousMouseX = xpos;
-            previousMouseY = ypos;
+            double dx = xpos;
+            double dy = -ypos;
+            System.out.println("dx: " + dx + ", dy: " + dy);
 
             yaw += dx * sensitivity;
             pitch += dy * sensitivity;
 
             pitch = Math.max(-89.0f, Math.min(89.0f, pitch));
+            System.out.println("pitch: " + pitch);
 
-            cameraFront.x = (float) Math.cos(Math.toRadians(yaw) * (float) Math.cos(Math.toRadians(pitch)));
+            cameraFront.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
             cameraFront.y = (float) Math.sin(Math.toRadians(pitch));
-            cameraFront.z = (float) Math.sin(Math.toRadians(yaw) * (float) Math.cos(Math.toRadians(pitch)));
+            cameraFront.z = (float) Math.sin(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
             cameraFront = cameraFront.normalize();
         });
 
