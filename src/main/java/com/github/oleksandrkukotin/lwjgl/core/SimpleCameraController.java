@@ -18,6 +18,7 @@ import java.nio.IntBuffer;
 
 import static glm_.Java.glm;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
@@ -61,14 +62,12 @@ public class SimpleCameraController {
 
     private Vec3 cameraPos = new Vec3(0.0f, 0.0f, 3.0f);
     private Vec3 cameraFront = new Vec3(0.0f, 0.0f, -1.0f);
-    private Vec3 cameraUp = new Vec3(0.0f, 1.0f, 3.0f);
-    private float cameraSpeed = 0.1f;
+    private final Vec3 cameraUp = new Vec3(0.0f, 1.0f, 3.0f);
+    private static final float CAMERA_SPEED = 0.7f;
 
-    private double previousMouseX = 0.0;
-    private double previousMouseY = 0.0;
-    private float yaw = -90.0f;
+    private float yaw = -89.0f;
     private float pitch = 0.0f;
-    private float sensitivity = 0.01f;
+    private static final float SENSITIVITY = 0.01f;
 
     private GLFWKeyCallback keyCallback;
     private GLFWFramebufferSizeCallback framebufferSizeCallback;
@@ -136,19 +135,21 @@ public class SimpleCameraController {
                 if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                     switch (key) {
                         case GLFW_KEY_UP:
-                            cameraPos = cameraPos.plus(cameraFront.times(cameraSpeed));
+                            cameraPos = cameraPos.plus(cameraFront.times(CAMERA_SPEED));
                             break;
                         case GLFW_KEY_DOWN:
-                            cameraPos = cameraPos.minus(cameraFront.times(cameraSpeed));
+                            cameraPos = cameraPos.minus(cameraFront.times(CAMERA_SPEED));
                             break;
                         case GLFW_KEY_LEFT:
-                            cameraPos = cameraPos.minus(cameraFront.cross(cameraUp).normalize().times(cameraSpeed));
+                            cameraPos = cameraPos.minus(cameraFront.cross(cameraUp).normalize().times(CAMERA_SPEED));
                             break;
                         case GLFW_KEY_RIGHT:
-                            cameraPos = cameraPos.plus(cameraFront.cross(cameraUp).normalize().times(cameraSpeed));
+                            cameraPos = cameraPos.plus(cameraFront.cross(cameraUp).normalize().times(CAMERA_SPEED));
                             break;
                         case GLFW_KEY_ESCAPE:
                             glfwSetWindowShouldClose(window, true);
+                            break;
+                        default:
                             break;
                     }
                 }
@@ -157,14 +158,12 @@ public class SimpleCameraController {
         glfwSetKeyCallback(window, keyCallback);
 
         glfwSetCursorPosCallback(window, (windowHandle, xpos, ypos) -> {
-            double dx = xpos;
             double dy = -ypos;
-            System.out.println("dx: " + dx + ", dy: " + dy);
 
-            yaw += dx * sensitivity;
-            pitch += dy * sensitivity;
+            yaw += (float) xpos * SENSITIVITY;
+            pitch += (float) dy * SENSITIVITY;
 
-            pitch = Math.max(-89.0f, Math.min(89.0f, pitch));
+            pitch = Math.clamp(pitch, -89.0f, 89.0f);
             System.out.println("pitch: " + pitch);
 
             cameraFront.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
