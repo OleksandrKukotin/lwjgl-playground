@@ -65,6 +65,8 @@ public class SimpleCameraController {
     private final Vec3 cameraUp = new Vec3(0.0f, 1.0f, 3.0f);
     private static final float CAMERA_SPEED = 0.7f;
 
+    double previousMouseX = 0.0f;
+    double previousMouseY = 0.0f;
     private float yaw = -89.0f;
     private float pitch = 0.0f;
     private static final float SENSITIVITY = 0.01f;
@@ -158,9 +160,12 @@ public class SimpleCameraController {
         glfwSetKeyCallback(window, keyCallback);
 
         glfwSetCursorPosCallback(window, (windowHandle, xpos, ypos) -> {
-            double dy = -ypos;
+            double dx = xpos - previousMouseX;
+            double dy = previousMouseY - ypos;
+            previousMouseX = xpos;
+            previousMouseY = ypos;
 
-            yaw += (float) xpos * SENSITIVITY;
+            yaw += (float) dx * SENSITIVITY;
             pitch += (float) dy * SENSITIVITY;
 
             pitch = Math.clamp(pitch, -89.0f, 89.0f);
