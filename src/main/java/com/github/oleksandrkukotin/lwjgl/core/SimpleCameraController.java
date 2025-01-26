@@ -208,7 +208,7 @@ public class SimpleCameraController {
         int vbo = glGenBuffers();
         int ebo = glGenBuffers();
         int vao = glGenVertexArrays();
-        float[] vertices = {
+        float[] trianglesVertices = {
                 0.0f, 0.0f,
                 0.5f, 1.0f,
                 1.0f, 0.0f,
@@ -217,8 +217,17 @@ public class SimpleCameraController {
                 -0.5f, -1.0f,
                 -1.0f, 0.0f
         };
-        int[] indices = {0, 1, 2, 3, 4, 5};
-        bindBuffersForTriangles(vao, vbo, ebo, vertices, indices);
+        int[] trianglesIndices = {0, 1, 2, 3, 4, 5};
+        bindBuffersForTriangles(vao, vbo, ebo, trianglesVertices, trianglesIndices);
+
+//        float[] floorVertices = { //complete it
+//                -5.0f, -0.5f, 5.0f,
+//                5.0f, -0.5f, 5.0f,
+//                5.0f, -0.5f, -5.0f,
+//                -5.0f, 0.5f, -5.0f
+//        };
+//        int[] floorIndices = {6, 7, 8, 8, 9, 10};
+//        bindBuffersForTriangles(vao, vbo, ebo, floorVertices, floorIndices);
 
         glUseProgram(shaderProgram);
 
@@ -253,7 +262,8 @@ public class SimpleCameraController {
             int colorLocation = glGetUniformLocation(shaderProgram, "color");
             glUniform3f(colorLocation, 0.5f, Math.abs((float) Math.sin(color)), Math.abs((float) Math.cos(color)));
 
-            glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0L);
+            glDrawElements(GL_TRIANGLES, trianglesIndices.length, GL_UNSIGNED_INT, 0L);
+//            glDrawElements(GL_TRIANGLES, floorIndices.length, GL_UNSIGNED_INT, 0L);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
