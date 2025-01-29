@@ -169,7 +169,6 @@ public class SimpleCameraController {
             pitch += (float) dy * SENSITIVITY;
 
             pitch = Math.clamp(pitch, -89.0f, 89.0f);
-            System.out.println("pitch: " + pitch);
 
             cameraFront.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
             cameraFront.y = (float) Math.sin(Math.toRadians(pitch));
@@ -205,30 +204,43 @@ public class SimpleCameraController {
 
         int shaderProgram = createShaderProgram();
 
-        int vbo = glGenBuffers();
-        int ebo = glGenBuffers();
-        int vao = glGenVertexArrays();
-        float[] trianglesVertices = {
-                0.0f, 0.0f,
-                0.5f, 1.0f,
-                1.0f, 0.0f,
-
-                0.0f, 0.0f,
-                -0.5f, -1.0f,
-                -1.0f, 0.0f
-        };
-        int[] trianglesIndices = {0, 1, 2, 3, 4, 5};
-        bindBuffersForTriangles(vao, vbo, ebo, trianglesVertices, trianglesIndices);
-
-//        float[] floorVertices = { //complete it
-//                -5.0f, -0.5f, 5.0f,
-//                5.0f, -0.5f, 5.0f,
-//                5.0f, -0.5f, -5.0f,
-//                -5.0f, 0.5f, -5.0f
+//        int vbo = glGenBuffers();
+//        int ebo = glGenBuffers();
+//        int vao = glGenVertexArrays();
+//        float[] trianglesVertices = {
+//                0.0f, 0.0f,
+//                0.5f, 1.0f,
+//                1.0f, 0.0f,
+//
+//                0.0f, 0.0f,
+//                -0.5f, -1.0f,
+//                -1.0f, 0.0f
 //        };
-//        int[] floorIndices = {6, 7, 8, 8, 9, 10};
-//        bindBuffersForTriangles(vao, vbo, ebo, floorVertices, floorIndices);
+//        int[] trianglesIndices = {0, 1, 2, 3, 4, 5};
+//        bindBuffersForTriangles(vao, vbo, ebo, trianglesVertices, trianglesIndices);
 
+        int floorVao = glGenVertexArrays();
+        int floorVbo = glGenBuffers();
+        int floorEbo = glGenBuffers();
+        float[] floorVertices = {
+                -5.0f, -0.5f, 5.0f,  // 0
+                5.0f, -0.5f, 5.0f,  // 1
+                5.0f, -0.5f, -5.0f,  // 2
+                -5.0f, -0.5f, -5.0f   // 3
+        };
+        int[] floorIndices = {0, 1, 3, 3, 1, 2};
+
+        bindBuffersForTriangles(floorVbo, floorVbo, floorEbo, floorVertices, floorIndices);
+//        glBindVertexArray(floorVao);
+//
+//        glBindBuffer(GL_ARRAY_BUFFER, floorVbo);
+//        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(floorVertices.length).put(floorVertices).flip(), GL_STATIC_DRAW);
+//
+//        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0L);
+//        glEnableVertexAttribArray(0);
+//
+//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floorEbo);
+//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(floorIndices.length).put(floorIndices).flip(), GL_STATIC_DRAW);
         glUseProgram(shaderProgram);
 
         float color = 0.0f;
@@ -262,9 +274,9 @@ public class SimpleCameraController {
             int colorLocation = glGetUniformLocation(shaderProgram, "color");
             glUniform3f(colorLocation, 0.5f, Math.abs((float) Math.sin(color)), Math.abs((float) Math.cos(color)));
 
-            glDrawElements(GL_TRIANGLES, trianglesIndices.length, GL_UNSIGNED_INT, 0L);
-//            glDrawElements(GL_TRIANGLES, floorIndices.length, GL_UNSIGNED_INT, 0L);
-
+            glBindVertexArray(floorVao);
+//            glDrawElements(GL_TRIANGLES, trianglesIndices.length, GL_UNSIGNED_INT, 0L);
+            glDrawElements(GL_TRIANGLES, floorIndices.length, GL_UNSIGNED_INT, 0L);
             glfwSwapBuffers(window);
             glfwPollEvents();
             color += 0.05f;
