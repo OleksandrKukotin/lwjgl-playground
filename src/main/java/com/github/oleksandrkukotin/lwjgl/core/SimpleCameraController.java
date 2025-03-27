@@ -204,21 +204,6 @@ public class SimpleCameraController {
 
         int shaderProgram = createShaderProgram();
 
-        int vbo = glGenBuffers();
-        int ebo = glGenBuffers();
-        int vao = glGenVertexArrays();
-        float[] trianglesVertices = {
-                0.0f, 0.0f,
-                0.5f, 1.0f,
-                1.0f, 0.0f,
-
-                0.0f, 0.0f,
-                -0.5f, -1.0f,
-                -1.0f, 0.0f
-        };
-        int[] trianglesIndices = {0, 1, 2, 3, 4, 5};
-        bindBuffersForTriangles(vao, vbo, ebo, trianglesVertices, trianglesIndices);
-
         int floorVao = glGenVertexArrays();
         int floorVbo = glGenBuffers();
         int floorEbo = glGenBuffers();
@@ -231,17 +216,8 @@ public class SimpleCameraController {
         int[] floorIndices = {0, 1, 3, 3, 1, 2};
 
         bindBuffersForTriangles(floorVbo, floorVbo, floorEbo, floorVertices, floorIndices);
-//        glBindVertexArray(floorVao);
-//
-//        glBindBuffer(GL_ARRAY_BUFFER, floorVbo);
-//        glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(floorVertices.length).put(floorVertices).flip(), GL_STATIC_DRAW);
-//
-//        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0L);
-//        glEnableVertexAttribArray(0);
-//
-//        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, floorEbo);
-//        glBufferData(GL_ELEMENT_ARRAY_BUFFER, BufferUtils.createIntBuffer(floorIndices.length).put(floorIndices).flip(), GL_STATIC_DRAW);
         glUseProgram(shaderProgram);
+        glEnable(GL_DEPTH_TEST);
 
         float color = 0.0f;
         while (!glfwWindowShouldClose(window)) {
@@ -275,7 +251,7 @@ public class SimpleCameraController {
             glUniform3f(colorLocation, 0.5f, Math.abs((float) Math.sin(color)), Math.abs((float) Math.cos(color)));
 
             glBindVertexArray(floorVao);
-            glDrawElements(GL_TRIANGLES, trianglesIndices.length, GL_UNSIGNED_INT, 0L);
+//            glDrawElements(GL_TRIANGLES, trianglesIndices.length, GL_UNSIGNED_INT, 0L);
             glDrawElements(GL_TRIANGLES, floorIndices.length, GL_UNSIGNED_INT, 0L);
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -311,7 +287,7 @@ public class SimpleCameraController {
 
     private void checkShaderCompileStatus(int vertexShader) {
         if (glGetShaderi(vertexShader, GL_COMPILE_STATUS) == GL_FALSE) {
-            throw new ShaderCompileException("Error during shader compilation occurred: " + glGetShaderi(vertexShader, GL_COMPILE_STATUS));
+            throw new ShaderCompileException("Error during shader compilation occurred: " + glGetShaderInfoLog(vertexShader));
         }
     }
 
