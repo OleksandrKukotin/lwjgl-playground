@@ -62,7 +62,7 @@ public class SimpleCameraController {
 
     private Vec3 cameraPos = new Vec3(0.0f, 0.0f, 3.0f);
     private Vec3 cameraFront = new Vec3(0.0f, 0.0f, -1.0f);
-    private final Vec3 cameraUp = new Vec3(0.0f, 1.0f, 3.0f);
+    private final Vec3 cameraUp = new Vec3(0.0f, 1.0f, 0.0f);
     private static final float CAMERA_SPEED = 0.7f;
 
     double previousMouseX = 0.0f;
