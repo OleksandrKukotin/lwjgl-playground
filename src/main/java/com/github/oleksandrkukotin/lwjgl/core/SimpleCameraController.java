@@ -1,6 +1,5 @@
 package com.github.oleksandrkukotin.lwjgl.core;
 
-import com.github.oleksandrkukotin.lwjgl.geometry.matrices.exception.ShaderCompileException;
 import glm_.mat4x4.Mat4;
 import glm_.vec3.Vec3;
 import org.lwjgl.BufferUtils;
@@ -16,6 +15,7 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import static com.github.oleksandrkukotin.lwjgl.core.Camera.CAMERA_SPEED;
 import static glm_.Java.glm;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
@@ -34,39 +34,16 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 
 public class SimpleCameraController {
 
-    private static final String VERTEX_SHADER_SOURCE = """
-            #version 330 core
-            layout(location = 0) in vec2 position;
-            
-            uniform mat4 model;
-            uniform mat4 view;
-            uniform mat4 projection;
-            
-            void main() {
-                gl_Position = projection * view * model * vec4(position, 0.0, 1.0);
-            }
-            """;
-
-    private static final String FRAGMENT_SHADER_SOURCE = """
-            #version 330 core
-            out vec4 FragColor;
-            uniform vec3 color;
-            void main() {
-                FragColor = vec4(color, 1.0);
-            }
-            """;
-
     private long window;
     private int width;
     private int height;
 
-    private Vec3 cameraPos = new Vec3(0.0f, 0.0f, 3.0f);
-    private Vec3 cameraFront = new Vec3(0.0f, 0.0f, -1.0f);
-    private final Vec3 cameraUp = new Vec3(0.0f, 1.0f, 0.0f);
-    private static final float CAMERA_SPEED = 0.7f;
+    private final ShaderProgram shaderProgram = new ShaderProgram();
+    private final Camera camera = new Camera();
 
-    double previousMouseX = 0.0f;
-    double previousMouseY = 0.0f;
+    private boolean isFirstMouseInput = true;
+    private double previousMouseX = 0.0f;
+    private double previousMouseY = 0.0f;
     private float yaw = -89.0f;
     private float pitch = 0.0f;
     private static final float SENSITIVITY = 0.01f;
@@ -137,16 +114,18 @@ public class SimpleCameraController {
                 if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                     switch (key) {
                         case GLFW_KEY_UP:
-                            cameraPos = cameraPos.plus(cameraFront.times(CAMERA_SPEED));
+                            camera.setPosition(camera.getPosition().plus(camera.getFront().times(CAMERA_SPEED)));
                             break;
                         case GLFW_KEY_DOWN:
-                            cameraPos = cameraPos.minus(cameraFront.times(CAMERA_SPEED));
+                            camera.setPosition(camera.getPosition().minus(camera.getFront().times(CAMERA_SPEED)));
                             break;
                         case GLFW_KEY_LEFT:
-                            cameraPos = cameraPos.minus(cameraFront.cross(cameraUp).normalize().times(CAMERA_SPEED));
+                            camera.setPosition(camera.getPosition().minus(camera.getFront().cross(camera.getUp())
+                                    .normalize().times(CAMERA_SPEED)));
                             break;
                         case GLFW_KEY_RIGHT:
-                            cameraPos = cameraPos.plus(cameraFront.cross(cameraUp).normalize().times(CAMERA_SPEED));
+                            camera.setPosition(camera.getPosition().plus(camera.getFront().cross(camera.getUp())
+                                    .normalize().times(CAMERA_SPEED)));
                             break;
                         case GLFW_KEY_ESCAPE:
                             glfwSetWindowShouldClose(window, true);
@@ -160,20 +139,19 @@ public class SimpleCameraController {
         glfwSetKeyCallback(window, keyCallback);
 
         glfwSetCursorPosCallback(window, (windowHandle, xpos, ypos) -> {
+            if (isFirstMouseInput) {
+                previousMouseX = xpos;
+                previousMouseY = ypos;
+                isFirstMouseInput = false;
+            }
             double dx = xpos - previousMouseX;
             double dy = previousMouseY - ypos;
-            previousMouseX = xpos;
-            previousMouseY = ypos;
 
             yaw += (float) dx * SENSITIVITY;
             pitch += (float) dy * SENSITIVITY;
-
             pitch = Math.clamp(pitch, -89.0f, 89.0f);
 
-            cameraFront.x = (float) Math.cos(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
-            cameraFront.y = (float) Math.sin(Math.toRadians(pitch));
-            cameraFront.z = (float) Math.sin(Math.toRadians(yaw)) * (float) Math.cos(Math.toRadians(pitch));
-            cameraFront = cameraFront.normalize();
+            camera.updateFront(pitch, yaw);
         });
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -202,7 +180,7 @@ public class SimpleCameraController {
 
         glClearColor(0.2f, 0.1f, 0.5f, 0.0f);
 
-        int shaderProgram = createShaderProgram();
+        int shaderProgramInt = shaderProgram.create();
 
         int floorVao = glGenVertexArrays();
         int floorVbo = glGenBuffers();
@@ -216,7 +194,7 @@ public class SimpleCameraController {
         int[] floorIndices = {0, 1, 3, 3, 1, 2};
 
         bindBuffersForTriangles(floorVbo, floorVbo, floorEbo, floorVertices, floorIndices);
-        glUseProgram(shaderProgram);
+        glUseProgram(shaderProgramInt);
         glEnable(GL_DEPTH_TEST);
 
         float color = 0.0f;
@@ -229,8 +207,8 @@ public class SimpleCameraController {
             model.rotate(color, new Vec3(0.0f, 0.0f, color));
             model.scale(new Vec3(1.0f, 1.0f, 1.0f));
 
-            Mat4 view = glm.lookAt(cameraPos, cameraPos.plus(cameraFront), cameraUp);
-            int viewLocation = glGetUniformLocation(shaderProgram, "view");
+            Mat4 view = glm.lookAt(camera.getPosition(), camera.getPosition().plus(camera.getFront()), camera.getUp());
+            int viewLocation = glGetUniformLocation(shaderProgramInt, "view");
             glUniformMatrix4fv(viewLocation, false, view.to(BufferUtils.createFloatBuffer(16)));
 
             Mat4 projection = glm.perspective(
@@ -239,15 +217,15 @@ public class SimpleCameraController {
                     0.1f,
                     100.0f
             );
-            int projectionLocation = glGetUniformLocation(shaderProgram, "projection");
+            int projectionLocation = glGetUniformLocation(shaderProgramInt, "projection");
             glUniformMatrix4fv(projectionLocation, false, projection.to(BufferUtils.createFloatBuffer(16)));
 
             FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
             model.to(matrixBuffer);
-            int modelLocation = glGetUniformLocation(shaderProgram, "model");
+            int modelLocation = glGetUniformLocation(shaderProgramInt, "model");
             glUniformMatrix4fv(modelLocation, false, matrixBuffer);
 
-            int colorLocation = glGetUniformLocation(shaderProgram, "color");
+            int colorLocation = glGetUniformLocation(shaderProgramInt, "color");
             glUniform3f(colorLocation, 0.5f, Math.abs((float) Math.sin(color)), Math.abs((float) Math.cos(color)));
 
             glBindVertexArray(floorVao);
@@ -256,38 +234,6 @@ public class SimpleCameraController {
             glfwSwapBuffers(window);
             glfwPollEvents();
             color += 0.05f;
-        }
-    }
-
-    private int createShaderProgram() {
-        int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, VERTEX_SHADER_SOURCE);
-        glCompileShader(vertexShader);
-        checkShaderCompileStatus(vertexShader);
-
-        int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, FRAGMENT_SHADER_SOURCE);
-        glCompileShader(fragmentShader);
-        checkShaderCompileStatus(fragmentShader);
-
-        int program = glCreateProgram();
-        glAttachShader(program, vertexShader);
-        glAttachShader(program, fragmentShader);
-        glLinkProgram(program);
-        if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE) {
-            throw new ShaderCompileException("Error during shader program compilation occurred: "
-                    + glGetProgramInfoLog(program));
-        }
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-
-        return program;
-    }
-
-    private void checkShaderCompileStatus(int vertexShader) {
-        if (glGetShaderi(vertexShader, GL_COMPILE_STATUS) == GL_FALSE) {
-            throw new ShaderCompileException("Error during shader compilation occurred: " + glGetShaderInfoLog(vertexShader));
         }
     }
 
